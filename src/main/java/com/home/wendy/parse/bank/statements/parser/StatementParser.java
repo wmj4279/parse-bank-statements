@@ -16,17 +16,13 @@ public class StatementParser {
 	private static final String BEGIN_TRANS_TEXT = "Date Number Description Credits Debits";
 	private static final String END_TRANS_TEXT = "Ending balance on";
 
-	// private File file;
 	private Path statement;
+	private String defaultDate;
 	private List<String> transactionLines = new ArrayList<>();
 
-	// // End result values
-	// String date = null;
-	// String description = null;
-	// String amount = null;
-
-	public StatementParser(Path statement) {
+	public StatementParser(Path statement, String defaultDate) {
 		this.statement = statement;
+		this.defaultDate = defaultDate;
 	}
 
 	/**
@@ -63,9 +59,6 @@ public class StatementParser {
 			e.printStackTrace();
 		}
 
-		// System.out.println("BEGIN TRANSACTION LINE DUMP");
-		// transactionLines.forEach(line -> System.out.println("\t" + line));
-
 		if (!transactionLines.isEmpty()) {
 			transList = parseTransactions(transactionLines);
 		} else {
@@ -82,7 +75,7 @@ public class StatementParser {
 	private List<String> parseTransactions(List<String> rawTransactions) {
 		List<String> commaSeparatedValueList = new ArrayList<>();
 		for (String rawTrans : rawTransactions) {
-			TransactionParser lineParser = new TransactionParser(rawTrans);
+			TransactionParser lineParser = new TransactionParser(rawTrans, defaultDate);
 			String csv = lineParser.parseLine();
 			if (!StringUtils.isEmpty(csv)) {
 				commaSeparatedValueList.add(csv);

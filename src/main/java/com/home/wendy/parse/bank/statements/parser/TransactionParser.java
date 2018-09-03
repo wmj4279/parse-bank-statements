@@ -1,20 +1,26 @@
 package com.home.wendy.parse.bank.statements.parser;
 
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class TransactionParser {
 
 	private static final String DOUBLE_QUOTE = "\"";
 	private static final String SEPARATOR = ",";
+	private static final String SEVEN = "7";
+	private static final String FORWARD_SLASH = "/";
 
 	private String rawTransData;
+	private String defaultDate;
 	private String date = null;
 	private String description = null;
 	private String amount = null;
-	// private String
 
-	public TransactionParser(String rawTransData) {
+	public TransactionParser(String rawTransData, String defaultDate) {
 		this.rawTransData = rawTransData;
+		this.defaultDate = defaultDate;
 	}
 
 	/**
@@ -92,6 +98,7 @@ public class TransactionParser {
 		}
 
 		System.out.println("\tRaw Trans: " + rawTransData);
+		date = repairDate(date, defaultDate);
 		return formatTransactionData(date, description, amount);
 	}
 
@@ -99,9 +106,45 @@ public class TransactionParser {
 		StringBuilder sb = new StringBuilder();
 		sb.append(DOUBLE_QUOTE).append(date).append(DOUBLE_QUOTE).append(SEPARATOR);
 		sb.append(DOUBLE_QUOTE).append(description).append(DOUBLE_QUOTE).append(SEPARATOR);
-		sb.append(DOUBLE_QUOTE).append(amount).append(DOUBLE_QUOTE).append(SEPARATOR);
+		sb.append(DOUBLE_QUOTE).append(amount).append(DOUBLE_QUOTE);
 		System.out.println("\t\tParsed Trans: " + sb.toString());
 		return sb.toString();
+	}
+
+	private String repairDate(String origDate, String lastResortDate) {
+		String result = null;
+		
+		// any digit = /d
+		// forward slash = /
+		Pattern pattern = Pattern.compile("\\d\\d/\\d\\d");
+		if (pattern.matcher(origDate).matches()) {
+			result = origDate;
+
+			// A value in a valid format can have a 7's where there shouldn't be. At least
+			// replace the leading 7's if they exist.
+			if (StringUtils.contains(result, SEVEN)) {
+
+				String[] dateParts = StringUtils.split(result, FORWARD_SLASH);
+
+				// Replace 7 in month
+				if (StringUtils.startsWith(dateParts[0], SEVEN)) {
+					dateParts[0] = RegExUtils.replaceFirst(dateParts[0], SEVEN, "1");
+				}
+
+				// Replace 7 in day
+				if (StringUtils.startsWith(dateParts[1], SEVEN)) {
+					dateParts[1] = RegExUtils.replaceFirst(dateParts[1], SEVEN, "1");
+				}
+
+				result = StringUtils.join(dateParts, FORWARD_SLASH);
+			}
+		} else {
+			// If this value isn't in the right format, just return the default because it's
+			// too difficult to tell what the OCR did
+			result = lastResortDate;
+		}
+		
+		return result;
 	}
 
 	public String getDate() {

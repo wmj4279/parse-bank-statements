@@ -1,6 +1,8 @@
 package com.home.wendy.parse.bank.statements;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,15 +16,17 @@ import com.home.wendy.parse.bank.statements.parser.StatementParser;
 public class ParseBankStatements {
 
 	private static final String FILE_EXTENSION = ".txt";
+	private static final String FILE_NAME_CSV = "\\Summary.csv";
 
 	public static void main(String[] args) {
-		if (args.length < 1) {
+		if (args.length < 2) {
 			System.out.println(
 					"To parse files, you must enter the full path to the directory.  Example: C:\\Users\\Orval\\myBankStaments");
 			System.exit(0);
 		}
 
 		String fullPathToDirectory = args[0];
+		String defaultDate = args[1];
 
 		System.out.println("Attempting to read " + FILE_EXTENSION + " files in directory " + fullPathToDirectory);
 
@@ -35,7 +39,7 @@ public class ParseBankStatements {
 			pathList.forEach(path -> {
 				if (path.toString().endsWith(FILE_EXTENSION)) {
 					System.out.println("Exporting data to .csv for file: " + path.toString());
-					StatementParser sp = new StatementParser(path);
+					StatementParser sp = new StatementParser(path, defaultDate);
 					List<String> transList = sp.parse();
 					if (!transList.isEmpty()) {
 						masterTransList.addAll(transList);
@@ -48,6 +52,38 @@ public class ParseBankStatements {
 			if (pathStream != null) {
 				pathStream.close();
 			}
+		}
+
+		// Write the csv transaction data to a file in this directory
+		writeData(Paths.get(fullPathToDirectory + FILE_NAME_CSV), masterTransList);
+	}
+
+	private static void writeData(Path path, List<String> transactions) {
+
+		// Charset charset = Charset.forName("US-ASCII");
+		// String s = ...;
+		// try (BufferedWriter writer = Files.newBufferedWriter(file, charset)) {
+		// writer.write(s, 0, s.length());
+		// } catch (IOException x) {
+		// System.err.format("IOException: %s%n", x);
+		// }
+
+		try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("US-ASCII"))) {
+			transactions.forEach(trans -> {
+				try {
+					writer.write(trans);
+				} catch (IOException e) {
+					System.out
+							.println(
+									"Error while writing a transaction to the csv file.  Aborting export. Error transaction: '"
+											+ trans + "'");
+					System.exit(0);
+				}
+			});
+		} catch (IOException e) {
+			System.out.println("Error while creating csv file.  Aborting export.");
+			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 }
