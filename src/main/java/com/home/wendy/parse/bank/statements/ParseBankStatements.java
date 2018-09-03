@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ public class ParseBankStatements {
 
 		Path source = Paths.get(fullPathToDirectory);
 		Stream<Path> pathStream = null;
+		List<String> masterTransList = new ArrayList<>();
 		try {
 			pathStream = Files.walk(source);
 			List<Path> pathList = pathStream.sorted().collect(Collectors.toList());
@@ -34,7 +36,10 @@ public class ParseBankStatements {
 				if (path.toString().endsWith(FILE_EXTENSION)) {
 					System.out.println("Exporting data to .csv for file: " + path.toString());
 					StatementParser sp = new StatementParser(path);
-					sp.exportData();
+					List<String> transList = sp.parse();
+					if (!transList.isEmpty()) {
+						masterTransList.addAll(transList);
+					}
 				}
 			});
 		} catch (IOException e) {
