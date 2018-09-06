@@ -33,7 +33,7 @@ public class TransactionParserTest {
 	// }
 
 	@Test
-	public void parseLineTypical() {
+	public void parseLineTypicalDebit() {
 
 		String line = "70719 POS Purchase - 10/19 Mach ID 000000 Walgreens Swe O 30.00";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
@@ -47,12 +47,13 @@ public class TransactionParserTest {
 		assertEquals(DEFAULT_DATE, tp.getDate());
 		assertNotNull(tp.getDescription());
 		assertEquals("POS Purchase - 10/19 Mach ID 000000 Walgreens Swe O", tp.getDescription());
-		assertNotNull(tp.getAmount());
-		assertEquals("30.00", tp.getAmount());
+		assertNotNull(tp.getDebit());
+		assertEquals("30.00", tp.getDebit());
+		assertNull(tp.getCredit());
 	}
 
 	@Test
-	public void parseLineSecondLineEndsWithDigits() {
+	public void parseDebitLine_SecondLineEndsWithDigits() {
 
 		String line = "Winston Salem NC 6014 0003291";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
@@ -61,11 +62,12 @@ public class TransactionParserTest {
 		assertNull(result);
 		assertNull(tp.getDate());
 		assertNull(tp.getDescription());
-		assertNull(tp.getAmount());
+		assertNull(tp.getDebit());
+		assertNull(tp.getCredit());
 	}
 
 	@Test
-	public void parseLineWithDailyEndingBalance() {
+	public void parseDebit_LineWithDailyEndingBalance() {
 
 		String line = "10119 POS Purchase - 10/19 Mach ID 000000 K & G Salvage East Bend 91.35 1779.38";
 		String expectedResult = "\"" + DEFAULT_DATE
@@ -80,12 +82,13 @@ public class TransactionParserTest {
 		assertEquals(DEFAULT_DATE, tp.getDate());
 		assertNotNull(tp.getDescription());
 		assertEquals("POS Purchase - 10/19 Mach ID 000000 K & G Salvage East Bend", tp.getDescription());
-		assertNotNull(tp.getAmount());
-		assertEquals("91.35", tp.getAmount());
+		assertNotNull(tp.getDebit());
+		assertEquals("91.35", tp.getDebit());
+		assertNull(tp.getCredit());
 	}
 
 	@Test
-	public void parseLineWithAmountLessThanTen() {
+	public void parseDebit_LineWithAmountLessThanTen() {
 
 		String line = "107 POS Purchase 10/14 Shell Service Station Winston Sale NC 639";
 		String expectedResult = "\"" + DEFAULT_DATE
@@ -99,8 +102,105 @@ public class TransactionParserTest {
 		assertEquals(DEFAULT_DATE, tp.getDate());
 		assertNotNull(tp.getDescription());
 		assertEquals("POS Purchase 10/14 Shell Service Station Winston Sale NC", tp.getDescription());
-		assertNotNull(tp.getAmount());
-		assertEquals("639", tp.getAmount());
+		assertNotNull(tp.getDebit());
+		assertEquals("639", tp.getDebit());
+		assertNull(tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_AtmCheckDepositLine() {
+
+		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99";
+		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals("10/17", tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("2978.99", tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_AtmCheckDepositLineWithDailyEndingBalance() {
+
+		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99 3,000.00";
+		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals("10/17", tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("2978.99", tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_DepositMadeInBranch() {
+
+		String line = "10724 Deposit Made In A Branch/Store 2,299.21";
+		String expectedResult = "\"" + DEFAULT_DATE + "\",\"Deposit Made In A Branch/Store\",\"2299.21\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals(DEFAULT_DATE, tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("Deposit Made In A Branch/Store", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("2299.21", tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_CreditCardPurchaseRim() {
+
+		String line = "70124 ‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC 181.53";
+		String expectedResult = "\"" + DEFAULT_DATE
+				+ "\",\"‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC\",\"181.53\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals(DEFAULT_DATE, tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("181.53", tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_OnlineTransfer() {
+
+		String line = "10/26 ‘Online Transfer Ref #Ibetk32S7B From Business Checking 250.00";
+		String expectedResult = "\"10/26\",\"‘Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals("10/26", tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("‘Online Transfer Ref #Ibetk32S7B From Business Checking", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("250.00", tp.getCredit());
 	}
 
 	@Test

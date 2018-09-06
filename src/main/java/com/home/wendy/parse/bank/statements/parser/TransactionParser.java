@@ -16,7 +16,9 @@ public class TransactionParser {
 	private String defaultDate;
 	private String date = null;
 	private String description = null;
-	private String amount = null;
+	// private String amount = null;
+	private String credit = null;
+	private String debit = null;
 
 	public TransactionParser(String rawTransData, String defaultDate) {
 		this.rawTransData = rawTransData;
@@ -55,12 +57,17 @@ public class TransactionParser {
 
 		// The description is everything before the lastLineValue
 		description = StringUtils.substringBefore(descriptionAndAmts, lastLineValue).trim();
+		String amount = null;
 
 		boolean isLastLineValueADecimal = false;
+
+		// Remove any commas that may be in a value like 2,458.54 because that will make
+		// the next set of checks fail
+		String lastLineValueMinusCommas = StringUtils.remove(lastLineValue, ",");
 		try {
 			// Is this a double.
-			Double.valueOf(lastLineValue);
-			amount = lastLineValue;
+			Double.valueOf(lastLineValueMinusCommas);
+			amount = lastLineValueMinusCommas;
 
 			// It's safe to set the date now because we know we have line that is the start
 			// of a new transaction
@@ -75,9 +82,13 @@ public class TransactionParser {
 			// Get the next value from the right side of the line
 			String secondToLastLineValue = StringUtils.substringAfterLast(lineWithoutLastValue, StringUtils.SPACE);
 
+			// Remove any commas that may be in a value like 2,458.54 because that will make
+			// the next set of checks fail
+			String secondToLastLineValueMinusCommas = StringUtils.remove(secondToLastLineValue, ",");
+
 			try {
-				Double.valueOf(secondToLastLineValue);
-				amount = secondToLastLineValue;
+				Double.valueOf(secondToLastLineValueMinusCommas);
+				amount = secondToLastLineValueMinusCommas;
 
 				// Since this line has two amounts, update the description to only the portion
 				// prior to the second amount
@@ -97,9 +108,36 @@ public class TransactionParser {
 			return null;
 		}
 
+		if (isCredit(description)) {
+			credit = amount;
+		} else {
+			debit = amount;
+		}
+
 		System.out.println("\tRaw Trans: " + rawTransData);
 		date = repairDate(date, defaultDate);
 		return formatTransactionData(date, description, amount);
+	}
+
+	/**
+	 * Based on text in the description, determine if the amount for this line item
+	 * is a credit or not
+	 * 
+	 * @param description
+	 * @return
+	 */
+	private boolean isCredit(String description) {
+		boolean result = false;
+
+		if (StringUtils.containsIgnoreCase(description, "Deposit")
+				|| StringUtils.containsIgnoreCase(description, "rtrn")
+				|| StringUtils.containsIgnoreCase(description, "rim")
+				|| (StringUtils.containsIgnoreCase(description, "Transfer")
+						&& StringUtils.containsIgnoreCase(description, "From"))) {
+			result = true;
+		}
+
+		return result;
 	}
 
 	private String formatTransactionData(String date, String description, String amount) {
@@ -151,11 +189,15 @@ public class TransactionParser {
 		return date;
 	}
 
-	public String getAmount() {
-		return amount;
-	}
-
 	public String getDescription() {
 		return description;
+	}
+
+	public String getDebit() {
+		return debit;
+	}
+
+	public String getCredit() {
+		return credit;
 	}
 }
