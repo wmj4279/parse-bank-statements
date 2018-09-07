@@ -16,7 +16,7 @@ import com.home.wendy.parse.bank.statements.parser.StatementParser;
 public class ParseBankStatements {
 
 	private static final String FILE_EXTENSION = ".txt";
-	private static final String FILE_NAME_CSV = "\\Summary.csv";
+	private static final String FILE_NAME_CSV = "//Summary.csv";
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -60,18 +60,10 @@ public class ParseBankStatements {
 
 	private static void writeData(Path path, List<String> transactions) {
 
-		// Charset charset = Charset.forName("US-ASCII");
-		// String s = ...;
-		// try (BufferedWriter writer = Files.newBufferedWriter(file, charset)) {
-		// writer.write(s, 0, s.length());
-		// } catch (IOException x) {
-		// System.err.format("IOException: %s%n", x);
-		// }
-
-		try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("US-ASCII"))) {
+		try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-8"))) {
 			transactions.forEach(trans -> {
 				try {
-					writer.write(trans);
+					writer.write(trans + "\n");
 				} catch (IOException e) {
 					System.out
 							.println(

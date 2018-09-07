@@ -116,9 +116,17 @@ public class TransactionParser {
 			debit = amount;
 		}
 
-		System.out.println("\tRaw Trans: " + rawTransData);
+		// System.out.println("\tRaw Trans: " + rawTransData);
 		date = repairDate(date, defaultDate);
+		description = repairDescription(description);
 		return formatTransactionData(date, description, credit, debit);
+	}
+
+	private String repairDescription(String desc) {
+		desc = StringUtils.remove(desc, "‘");
+		desc = StringUtils.remove(desc, "'");
+		desc = StringUtils.remove(desc, "\"");
+		return desc;
 	}
 
 	private String addDecimalToThreeDigitAmt(String amt) {
@@ -168,7 +176,7 @@ public class TransactionParser {
 			sb.append(DOUBLE_QUOTE).append(DOUBLE_QUOTE);
 		}
 
-		System.out.println("\t\tParsed Trans: " + sb.toString());
+		// System.out.println("\t\tParsed Trans: " + sb.toString());
 		return sb.toString();
 	}
 

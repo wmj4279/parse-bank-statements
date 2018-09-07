@@ -104,7 +104,7 @@ public class TransactionParserTest {
 	public void parseCredit_AtmCheckDepositLine() {
 
 		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99";
-		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
+		String expectedResult = "\"10/17\",\"ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -113,7 +113,7 @@ public class TransactionParserTest {
 		assertNotNull(tp.getDate());
 		assertEquals("10/17", tp.getDate());
 		assertNotNull(tp.getDescription());
-		assertEquals("‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
+		assertEquals("ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
 		assertNull(tp.getDebit());
 		assertNotNull(tp.getCredit());
 		assertEquals("2978.99", tp.getCredit());
@@ -123,7 +123,7 @@ public class TransactionParserTest {
 	public void parseCredit_AtmCheckDepositLineWithDailyEndingBalance() {
 
 		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99 3,000.00";
-		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
+		String expectedResult = "\"10/17\",\"ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -132,7 +132,7 @@ public class TransactionParserTest {
 		assertNotNull(tp.getDate());
 		assertEquals("10/17", tp.getDate());
 		assertNotNull(tp.getDescription());
-		assertEquals("‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
+		assertEquals("ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd", tp.getDescription());
 		assertNull(tp.getDebit());
 		assertNotNull(tp.getCredit());
 		assertEquals("2978.99", tp.getCredit());
@@ -162,7 +162,7 @@ public class TransactionParserTest {
 
 		String line = "70124 ‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC 181.53";
 		String expectedResult = "\"" + DEFAULT_DATE
-				+ "\",\"‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC\",\"181.53\",\"\"";
+				+ "\",\"Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC\",\"181.53\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -171,7 +171,7 @@ public class TransactionParserTest {
 		assertNotNull(tp.getDate());
 		assertEquals(DEFAULT_DATE, tp.getDate());
 		assertNotNull(tp.getDescription());
-		assertEquals("‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC", tp.getDescription());
+		assertEquals("Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC", tp.getDescription());
 		assertNull(tp.getDebit());
 		assertNotNull(tp.getCredit());
 		assertEquals("181.53", tp.getCredit());
@@ -181,7 +181,7 @@ public class TransactionParserTest {
 	public void parseCredit_OnlineTransfer() {
 
 		String line = "10/26 ‘Online Transfer Ref #Ibetk32S7B From Business Checking 250.00";
-		String expectedResult = "\"10/26\",\"‘Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\",\"\"";
+		String expectedResult = "\"10/26\",\"Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -190,7 +190,26 @@ public class TransactionParserTest {
 		assertNotNull(tp.getDate());
 		assertEquals("10/26", tp.getDate());
 		assertNotNull(tp.getDescription());
-		assertEquals("‘Online Transfer Ref #Ibetk32S7B From Business Checking", tp.getDescription());
+		assertEquals("Online Transfer Ref #Ibetk32S7B From Business Checking", tp.getDescription());
+		assertNull(tp.getDebit());
+		assertNotNull(tp.getCredit());
+		assertEquals("250.00", tp.getCredit());
+	}
+
+	@Test
+	public void parseCredit_RemoveSingleQuote() {
+
+		String line = "10/26 'Online Transfer Ref #Ibetk32S7B From Business Checking 250.00";
+		String expectedResult = "\"10/26\",\"Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\",\"\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals("10/26", tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("Online Transfer Ref #Ibetk32S7B From Business Checking", tp.getDescription());
 		assertNull(tp.getDebit());
 		assertNotNull(tp.getCredit());
 		assertEquals("250.00", tp.getCredit());
