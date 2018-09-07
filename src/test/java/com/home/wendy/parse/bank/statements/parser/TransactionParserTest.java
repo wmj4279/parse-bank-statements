@@ -18,8 +18,6 @@ public class TransactionParserTest {
 
 	private static Method methodRepairDate;
 
-	private TransactionParser sp;
-
 	@BeforeClass
 	public static void setUpBeforeClass() throws NoSuchMethodException, SecurityException {
 		methodRepairDate = TransactionParser.class.getDeclaredMethod(METHOD_NAME_REPAIR_DATE, String.class,
@@ -27,18 +25,13 @@ public class TransactionParserTest {
 		methodRepairDate.setAccessible(true);
 	}
 
-	// @Before
-	// public void setUp() {
-	//// sp = new TransactionParser(null);
-	// }
-
 	@Test
 	public void parseLineTypicalDebit() {
 
 		String line = "70719 POS Purchase - 10/19 Mach ID 000000 Walgreens Swe O 30.00";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String expectedResult = "\"" + DEFAULT_DATE
-				+ "\",\"POS Purchase - 10/19 Mach ID 000000 Walgreens Swe O\",\"30.00\"";
+				+ "\",\"POS Purchase - 10/19 Mach ID 000000 Walgreens Swe O\",\"\",\"30.00\"";
 		String result = tp.parseLine();
 
 		assertNotNull(result);
@@ -71,7 +64,7 @@ public class TransactionParserTest {
 
 		String line = "10119 POS Purchase - 10/19 Mach ID 000000 K & G Salvage East Bend 91.35 1779.38";
 		String expectedResult = "\"" + DEFAULT_DATE
-				+ "\",\"POS Purchase - 10/19 Mach ID 000000 K & G Salvage East Bend\",\"91.35\"";
+				+ "\",\"POS Purchase - 10/19 Mach ID 000000 K & G Salvage East Bend\",\"\",\"91.35\"";
 
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
@@ -92,7 +85,7 @@ public class TransactionParserTest {
 
 		String line = "107 POS Purchase 10/14 Shell Service Station Winston Sale NC 639";
 		String expectedResult = "\"" + DEFAULT_DATE
-				+ "\",\"POS Purchase 10/14 Shell Service Station Winston Sale NC\",\"639\"";
+				+ "\",\"POS Purchase 10/14 Shell Service Station Winston Sale NC\",\"\",\"6.39\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -103,7 +96,7 @@ public class TransactionParserTest {
 		assertNotNull(tp.getDescription());
 		assertEquals("POS Purchase 10/14 Shell Service Station Winston Sale NC", tp.getDescription());
 		assertNotNull(tp.getDebit());
-		assertEquals("639", tp.getDebit());
+		assertEquals("6.39", tp.getDebit());
 		assertNull(tp.getCredit());
 	}
 
@@ -111,7 +104,7 @@ public class TransactionParserTest {
 	public void parseCredit_AtmCheckDepositLine() {
 
 		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99";
-		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\"";
+		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -130,7 +123,7 @@ public class TransactionParserTest {
 	public void parseCredit_AtmCheckDepositLineWithDailyEndingBalance() {
 
 		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99 3,000.00";
-		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\"";
+		String expectedResult = "\"10/17\",\"‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd\",\"2978.99\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -149,7 +142,7 @@ public class TransactionParserTest {
 	public void parseCredit_DepositMadeInBranch() {
 
 		String line = "10724 Deposit Made In A Branch/Store 2,299.21";
-		String expectedResult = "\"" + DEFAULT_DATE + "\",\"Deposit Made In A Branch/Store\",\"2299.21\"";
+		String expectedResult = "\"" + DEFAULT_DATE + "\",\"Deposit Made In A Branch/Store\",\"2299.21\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -169,7 +162,7 @@ public class TransactionParserTest {
 
 		String line = "70124 ‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC 181.53";
 		String expectedResult = "\"" + DEFAULT_DATE
-				+ "\",\"‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC\",\"181.53\"";
+				+ "\",\"‘Check Crd Pur Rim 10/21 Bimco Corporation Winston Sale NC\",\"181.53\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 
@@ -188,7 +181,7 @@ public class TransactionParserTest {
 	public void parseCredit_OnlineTransfer() {
 
 		String line = "10/26 ‘Online Transfer Ref #Ibetk32S7B From Business Checking 250.00";
-		String expectedResult = "\"10/26\",\"‘Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\"";
+		String expectedResult = "\"10/26\",\"‘Online Transfer Ref #Ibetk32S7B From Business Checking\",\"250.00\",\"\"";
 		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE);
 		String result = tp.parseLine();
 

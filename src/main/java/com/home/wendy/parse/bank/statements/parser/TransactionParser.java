@@ -108,6 +108,8 @@ public class TransactionParser {
 			return null;
 		}
 
+		amount = addDecimalToThreeDigitAmt(amount);
+
 		if (isCredit(description)) {
 			credit = amount;
 		} else {
@@ -116,7 +118,17 @@ public class TransactionParser {
 
 		System.out.println("\tRaw Trans: " + rawTransData);
 		date = repairDate(date, defaultDate);
-		return formatTransactionData(date, description, amount);
+		return formatTransactionData(date, description, credit, debit);
+	}
+
+	private String addDecimalToThreeDigitAmt(String amt) {
+		if (!StringUtils.contains(amt, ".") && amt.length() == 3) {
+			// This is a three digit amount and the decimal wasn't read in, so add it
+			String decimalAmt = StringUtils.substring(amt, 0, 1).concat(".").concat(StringUtils.substring(amt, 1));
+			amt = decimalAmt;
+		}
+
+		return amt;
 	}
 
 	/**
@@ -140,11 +152,22 @@ public class TransactionParser {
 		return result;
 	}
 
-	private String formatTransactionData(String date, String description, String amount) {
+	private String formatTransactionData(String date, String description, String credit, String debit) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(DOUBLE_QUOTE).append(date).append(DOUBLE_QUOTE).append(SEPARATOR);
 		sb.append(DOUBLE_QUOTE).append(description).append(DOUBLE_QUOTE).append(SEPARATOR);
-		sb.append(DOUBLE_QUOTE).append(amount).append(DOUBLE_QUOTE);
+		if (credit != null) {
+			sb.append(DOUBLE_QUOTE).append(credit).append(DOUBLE_QUOTE).append(SEPARATOR);
+		} else {
+			sb.append(DOUBLE_QUOTE).append(DOUBLE_QUOTE).append(SEPARATOR);
+		}
+
+		if (debit != null) {
+			sb.append(DOUBLE_QUOTE).append(debit).append(DOUBLE_QUOTE);
+		} else {
+			sb.append(DOUBLE_QUOTE).append(DOUBLE_QUOTE);
+		}
+
 		System.out.println("\t\tParsed Trans: " + sb.toString());
 		return sb.toString();
 	}
@@ -175,6 +198,9 @@ public class TransactionParser {
 				}
 
 				result = StringUtils.join(dateParts, FORWARD_SLASH);
+
+				// Since we have found a valid date, update the defaultDate to this valid value
+				defaultDate = result;
 			}
 		} else {
 			// If this value isn't in the right format, just return the default because it's
@@ -199,5 +225,9 @@ public class TransactionParser {
 
 	public String getCredit() {
 		return credit;
+	}
+
+	public String getDefaultDate() {
+		return defaultDate;
 	}
 }
