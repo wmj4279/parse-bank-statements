@@ -17,6 +17,8 @@ public class ParseBankStatements {
 
 	private static final String FILE_EXTENSION = ".txt";
 	private static final String FILE_NAME_CSV = "//Summary.csv";
+	private static final String HEADER = "Date,Description,Credit,Debit";
+	private static final String NEW_LINE = "\n";
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -61,9 +63,13 @@ public class ParseBankStatements {
 	private static void writeData(Path path, List<String> transactions) {
 
 		try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-8"))) {
+			// Write the header (or column names to the file)
+			writer.write(HEADER);
+			writer.write(NEW_LINE);
 			transactions.forEach(trans -> {
 				try {
-					writer.write(trans + "\n");
+					writer.write(trans);
+					writer.write(NEW_LINE);
 				} catch (IOException e) {
 					System.out
 							.println(
