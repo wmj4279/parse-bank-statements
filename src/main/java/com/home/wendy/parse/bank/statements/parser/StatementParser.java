@@ -15,6 +15,7 @@ public class StatementParser {
 	// Heading that occurs before transactions are listed on a page
 	private static final String BEGIN_TRANS_TEXT = "Date Number Description Credits Debits";
 	private static final String END_TRANS_TEXT = "Ending balance on";
+	private static final String P = "p";
 
 	private Path statement;
 	private String defaultDate;
@@ -59,8 +60,12 @@ public class StatementParser {
 			e.printStackTrace();
 		}
 
+
+		String year = findYear(statement.toString());
+		System.out.println("Year: " + year);
+
 		if (!transactionLines.isEmpty()) {
-			transList = parseTransactions(transactionLines);
+			transList = parseTransactions(transactionLines, year);
 		} else {
 			System.out.println("No transaction data found in file: " + statement.toString());
 		}
@@ -68,14 +73,31 @@ public class StatementParser {
 		return transList;
 	}
 
+	/**
+	 * Extract the two digit year from the file path. Example, if the file path
+	 * looks like:
+	 * 
+	 * /testing/statements/Scan11-2013p1-1.txt
+	 * 
+	 * The year will be 13. This assumes all files follow the naming patter of:
+	 * Scan11-2013p1-1.txt
+	 * 
+	 * @param statementPath
+	 * @return
+	 */
+	private String findYear(String statementPath) {
+		int pIndex = StringUtils.lastIndexOf(statementPath, P);
+		return StringUtils.substring(statementPath, pIndex - 2, pIndex);
+	}
+
 	private void addTransactionLine(String line) {
 		transactionLines.add(line);
 	}
 
-	private List<String> parseTransactions(List<String> rawTransactions) {
+	private List<String> parseTransactions(List<String> rawTransactions, String year) {
 		List<String> commaSeparatedValueList = new ArrayList<>();
 		for (String rawTrans : rawTransactions) {
-			TransactionParser lineParser = new TransactionParser(rawTrans, defaultDate);
+			TransactionParser lineParser = new TransactionParser(rawTrans, defaultDate, year);
 			defaultDate = lineParser.getDefaultDate();
 			String csv = lineParser.parseLine();
 			if (!StringUtils.isEmpty(csv)) {

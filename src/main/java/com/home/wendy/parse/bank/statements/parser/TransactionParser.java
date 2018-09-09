@@ -16,13 +16,14 @@ public class TransactionParser {
 	private String defaultDate;
 	private String date = null;
 	private String description = null;
-	// private String amount = null;
 	private String credit = null;
 	private String debit = null;
+	private String year = null;
 
-	public TransactionParser(String rawTransData, String defaultDate) {
+	public TransactionParser(String rawTransData, String defaultDate, String year) {
 		this.rawTransData = rawTransData;
 		this.defaultDate = defaultDate;
+		this.year = year;
 	}
 
 	/**
@@ -117,7 +118,7 @@ public class TransactionParser {
 		}
 
 		// System.out.println("\tRaw Trans: " + rawTransData);
-		date = repairDate(date, defaultDate);
+		date = repairDate(date, defaultDate, year);
 		description = repairDescription(description);
 		return formatTransactionData(date, description, credit, debit);
 	}
@@ -180,7 +181,7 @@ public class TransactionParser {
 		return sb.toString();
 	}
 
-	private String repairDate(String origDate, String lastResortDate) {
+	private String repairDate(String origDate, String lastResortDate, String year) {
 		String result = null;
 		
 		// any digit = /d
@@ -216,6 +217,9 @@ public class TransactionParser {
 			result = lastResortDate;
 		}
 		
+		// Append year
+		result = result.concat(FORWARD_SLASH).concat(year);
+
 		return result;
 	}
 
