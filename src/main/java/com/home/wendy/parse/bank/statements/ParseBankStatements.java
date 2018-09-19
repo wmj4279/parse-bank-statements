@@ -19,6 +19,7 @@ public class ParseBankStatements {
 	private static final String FILE_NAME_CSV = "//Summary.csv";
 	private static final String HEADER = "Date,Description,Credit,Debit";
 	private static final String NEW_LINE = "\n";
+	private static String defaultDate;
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -28,7 +29,7 @@ public class ParseBankStatements {
 		}
 
 		String fullPathToDirectory = args[0];
-		String defaultDate = args[1];
+		setDefaultDate(args[1]);
 
 		System.out.println("Attempting to read " + FILE_EXTENSION + " files in directory " + fullPathToDirectory);
 
@@ -41,7 +42,9 @@ public class ParseBankStatements {
 			pathList.forEach(path -> {
 				if (path.toString().endsWith(FILE_EXTENSION)) {
 					System.out.println("Exporting data to .csv for file: " + path.toString());
-					StatementParser sp = new StatementParser(path, defaultDate);
+					StatementParser sp = new StatementParser(path, getDefaultDate());
+					setDefaultDate(sp.getDefaultDate());
+					// this.defaultDate = sp.getDefaultDate();
 					List<String> transList = sp.parse();
 					if (!transList.isEmpty()) {
 						masterTransList.addAll(transList);
@@ -58,6 +61,14 @@ public class ParseBankStatements {
 
 		// Write the csv transaction data to a file in this directory
 		writeData(Paths.get(fullPathToDirectory + FILE_NAME_CSV), masterTransList);
+	}
+
+	private static void setDefaultDate(String dd) {
+		defaultDate = dd;
+	}
+
+	private static String getDefaultDate() {
+		return defaultDate;
 	}
 
 	private static void writeData(Path path, List<String> transactions) {

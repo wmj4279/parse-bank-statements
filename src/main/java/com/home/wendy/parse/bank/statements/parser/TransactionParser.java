@@ -7,6 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 
 public class TransactionParser {
 
+	// TODO: Make this configurable
+	private static final boolean enableLogging = true;
+
 	private static final String DOUBLE_QUOTE = "\"";
 	private static final String SEPARATOR = ",";
 	private static final String SEVEN = "7";
@@ -24,21 +27,27 @@ public class TransactionParser {
 		this.rawTransData = rawTransData;
 		this.defaultDate = defaultDate;
 		this.year = year;
+
+		if (enableLogging) {
+			System.out.println("Created new instance of TransactionParser.");
+			System.out.println("\trawTransData: " + rawTransData);
+			System.out.println("\tdefaultDate: " + defaultDate);
+			System.out.println("\tyear: " + year);
+		}
 	}
 
 	/**
 	 * Returns comma separated values for date, description, credit, debit
 	 */
 	public String parseLine() {
+		// System.out.println("Parsing line: " + rawTransData);
 		String[] firstTwoPieces = StringUtils.split(rawTransData, StringUtils.SPACE, 2);
 		if (firstTwoPieces.length < 2) {
 			// Continue on to the next line because this is not a line that has the start of
 			// a new transaction on it
 			return null;
 		}
-		// String date = firstTwoPieces[0];
-		// String description = null;
-		// String amount = null;
+
 		String descriptionAndAmts = firstTwoPieces[1];
 
 		// Get the last value from the right side of the line. If this is a line that a
@@ -184,9 +193,18 @@ public class TransactionParser {
 	private String repairDate(String origDate, String lastResortDate, String year) {
 		String result = null;
 		
+		// Look for a date with a single digit for day of the month. For consistency,
+		// prefix that day
+		// with a 0 before going forward
+		Pattern singleDatePattern = Pattern.compile("\\d{1,2}/\\d");
+		if (singleDatePattern.matcher(origDate).matches()) {
+			String[] dateParts = StringUtils.split(origDate, "/");
+			origDate = dateParts[0].concat("/").concat("0").concat(dateParts[1]);
+		}
+
 		// any digit = /d
 		// forward slash = /
-		Pattern pattern = Pattern.compile("\\d\\d/\\d\\d");
+		Pattern pattern = Pattern.compile("\\d{1,2}/\\d\\d");
 		if (pattern.matcher(origDate).matches()) {
 			result = origDate;
 
@@ -218,9 +236,11 @@ public class TransactionParser {
 		}
 		
 		// Append year
-		result = result.concat(FORWARD_SLASH).concat(year);
+		String dateWithSlash = result.concat(FORWARD_SLASH);
+		String dateWithSlashAndYear = dateWithSlash.concat(year);
 
-		return result;
+		// return result;
+		return dateWithSlashAndYear;
 	}
 
 	public String getDate() {

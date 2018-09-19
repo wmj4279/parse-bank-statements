@@ -12,6 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 
 public class StatementParser {
 
+	// TODO: Make this configurable
+	private static final boolean enableLogging = true;
+
 	// Heading that occurs before transactions are listed on a page
 	private static final String BEGIN_TRANS_TEXT = "Date Number Description Credits Debits";
 	private static final String END_TRANS_TEXT = "Ending balance on";
@@ -62,7 +65,6 @@ public class StatementParser {
 
 
 		String year = findYear(statement.toString());
-		System.out.println("Year: " + year);
 
 		if (!transactionLines.isEmpty()) {
 			transList = parseTransactions(transactionLines, year);
@@ -98,13 +100,30 @@ public class StatementParser {
 		List<String> commaSeparatedValueList = new ArrayList<>();
 		for (String rawTrans : rawTransactions) {
 			TransactionParser lineParser = new TransactionParser(rawTrans, defaultDate, year);
-			defaultDate = lineParser.getDefaultDate();
+			// defaultDate = lineParser.getDefaultDate();
 			String csv = lineParser.parseLine();
+			if (enableLogging) {
+				System.out.println("Parsed Line: " + csv);
+			}
+
+			if (lineParser.getDate() != null) {
+				// This is so hokey. Pull the month and day off the date since we are passing
+				// the year in separately.
+				defaultDate = StringUtils.substring(lineParser.getDate(), 0, 5);
+				if (enableLogging) {
+					System.out.println("Updated defaultDate to: " + defaultDate);
+				}
+			}
+
 			if (!StringUtils.isEmpty(csv)) {
 				commaSeparatedValueList.add(csv);
 			}
 		}
 
 		return commaSeparatedValueList;
+	}
+
+	public String getDefaultDate() {
+		return defaultDate;
 	}
 }

@@ -104,6 +104,26 @@ public class TransactionParserTest {
 	}
 
 	@Test
+	public void parseDebit_LineWithAlphaInDate() {
+
+		String line = "T0n7 ‘Check Crd Purchase 10/13 North Point Chrysi 336-7590599 NC 50.73";
+		String expectedResult = "\"" + DEFAULT_DATE_WITH_YEAR
+				+ "\",\"Check Crd Purchase 10/13 North Point Chrysi 336-7590599 NC\",\"\",\"50.73\"";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE, YEAR);
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals(DEFAULT_DATE_WITH_YEAR, tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("Check Crd Purchase 10/13 North Point Chrysi 336-7590599 NC", tp.getDescription());
+		assertNotNull(tp.getDebit());
+		assertEquals("50.73", tp.getDebit());
+		assertNull(tp.getCredit());
+	}
+
+	@Test
 	public void parseCredit_AtmCheckDepositLine() {
 
 		String line = "10/17 ‘ATM Check Deposit - 10/17 Mach ID 20820 2925 Reynolda Rd 2,978.99";
@@ -121,6 +141,26 @@ public class TransactionParserTest {
 		assertNull(tp.getDebit());
 		assertNotNull(tp.getCredit());
 		assertEquals("2978.99", tp.getCredit());
+	}
+
+	@Test
+	public void parseLine_SingleDigitDayOfMonth() {
+
+		String line = "11/3 Check Crd Purchase 11/02 Two Brothers Citgo Winston Sale NC 22.29";
+		TransactionParser tp = new TransactionParser(line, DEFAULT_DATE, YEAR);
+		String expectedResult = "\"11/03" + FORWARD_SLASH + YEAR
+				+ "\",\"Check Crd Purchase 11/02 Two Brothers Citgo Winston Sale NC\",\"\",\"22.29\"";
+		String result = tp.parseLine();
+
+		assertNotNull(result);
+		assertEquals(expectedResult, result);
+		assertNotNull(tp.getDate());
+		assertEquals("11/03" + FORWARD_SLASH + YEAR, tp.getDate());
+		assertNotNull(tp.getDescription());
+		assertEquals("Check Crd Purchase 11/02 Two Brothers Citgo Winston Sale NC", tp.getDescription());
+		assertNotNull(tp.getDebit());
+		assertEquals("22.29", tp.getDebit());
+		assertNull(tp.getCredit());
 	}
 
 	@Test
@@ -327,13 +367,59 @@ public class TransactionParserTest {
 	public void repairDate_threeDigitWithoutSlash() throws IllegalAccessException, IllegalArgumentException {
 		TransactionParser tp = new TransactionParser(null, null, null);
 
-		// In this case, the date was actually 10/19. The slash was read as a 7 and the
-		// last two digits were not read for whatever reason
 		String testDate = "107";
 		try {
 			String result = (String) methodRepairDate.invoke(tp, testDate, DEFAULT_DATE, YEAR);
 			assertNotNull(result);
 			assertEquals(DEFAULT_DATE_WITH_YEAR, result);
+		} catch (InvocationTargetException e) {
+			e.getTargetException().printStackTrace();
+			fail("Unexpected Exception");
+		}
+	}
+
+	@Test
+	public void repairDate_singleDigitDayOfMonth() throws IllegalAccessException, IllegalArgumentException {
+		TransactionParser tp = new TransactionParser(null, null, null);
+
+		// In this case, the date was actually 11/03.
+		String testDate = "11/3";
+		try {
+			String result = (String) methodRepairDate.invoke(tp, testDate, DEFAULT_DATE, YEAR);
+			assertNotNull(result);
+			assertEquals("11/03" + FORWARD_SLASH + YEAR, result);
+		} catch (InvocationTargetException e) {
+			e.getTargetException().printStackTrace();
+			fail("Unexpected Exception");
+		}
+	}
+
+	@Test
+	public void repairDate_singleDigitMonth() throws IllegalAccessException, IllegalArgumentException {
+		TransactionParser tp = new TransactionParser(null, null, null);
+
+		// In this case, the date was actually 05/03
+		String testDate = "5/23";
+		try {
+			String result = (String) methodRepairDate.invoke(tp, testDate, DEFAULT_DATE, YEAR);
+			assertNotNull(result);
+			assertEquals("5/23" + FORWARD_SLASH + YEAR, result);
+		} catch (InvocationTargetException e) {
+			e.getTargetException().printStackTrace();
+			fail("Unexpected Exception");
+		}
+	}
+
+	@Test
+	public void repairDate_singleDigitMonth_singleDigitDay() throws IllegalAccessException, IllegalArgumentException {
+		TransactionParser tp = new TransactionParser(null, null, null);
+
+		// In this case, the date was actually 05/03
+		String testDate = "5/3";
+		try {
+			String result = (String) methodRepairDate.invoke(tp, testDate, DEFAULT_DATE, YEAR);
+			assertNotNull(result);
+			assertEquals("5/03" + FORWARD_SLASH + YEAR, result);
 		} catch (InvocationTargetException e) {
 			e.getTargetException().printStackTrace();
 			fail("Unexpected Exception");
